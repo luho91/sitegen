@@ -1,3 +1,5 @@
+import re
+
 from enum import Enum
 from leafnode import LeafNode
 from htmlnode import HTMLNode
@@ -44,3 +46,36 @@ def text_node_to_html_node(text_node):
             return LeafNode("img", "", props={"src": text_node.url, "alt": text_node.text})
         case _:
             raise Exception("Bruh, no compatible node type found ...")
+
+
+def split_nodes_delimiter(old_nodes, delimiter, text_type):
+    r = []
+    for old_node in old_nodes:
+        if old_node.text_type != TextType.TEXT:
+            r.append(old_node)
+        else:
+            text_array = old_node.text.split(delimiter)
+            text = ""
+            if len(text_array) % 2 == 0:
+                raise Exception("Uneven amount of delimiters found!")
+            
+            while len(text_array) > 0:
+                # no more delimiters found
+                if len(text_array) == 1:
+                    r.append(TextNode(text_array[0], TextType.TEXT))
+                    break
+                text_array, partial_array = text_array[3:], text_array[0:3]
+                r.append(TextNode(partial_array[0], TextType.TEXT))
+                r.append(TextNode(partial_array[1], text_type))
+                r.append(TextNode(partial_array[2], TextType.TEXT))
+    return r
+
+
+def extract_markdown_images(text):
+    matches = re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
+    return matches
+
+
+def extract_markdown_links(text):
+    matches = re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
+    return matches

@@ -1,6 +1,6 @@
 import unittest
 
-from textnode import TextNode, TextType, text_node_to_html_node
+from textnode import TextNode, TextType, text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links
 
 
 class TestTextNode(unittest.TestCase):
@@ -39,6 +39,24 @@ class TestTextNode(unittest.TestCase):
         html_node = text_node_to_html_node(node)
         self.assertEqual(html_node.tag, None)
         self.assertEqual(html_node.value, "this is a text node")
+
+
+    def test_split_nodes_delimiter(self):
+        nodes = [
+            TextNode("_would you look_ at this?", TextType.ITALIC),
+            TextNode("You are *fat*.", TextType.TEXT),
+            TextNode("`this is all code`", TextType.CODE),
+        ]
+
+        new_nodes = split_nodes_delimiter(nodes, "*", TextType.BOLD)
+        self.assertEqual(new_nodes[2], TextNode("fat", TextType.BOLD))
+
+    
+    def test_extract_markdown_images(self):
+        matches = extract_markdown_images(
+            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png)"
+        )
+        self.assertListEqual([("image", "https://i.imgur.com/zjjcJKZ.png")], matches)
 
 
 if __name__ == "__main__":
