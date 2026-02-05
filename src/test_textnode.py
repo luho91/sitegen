@@ -1,6 +1,6 @@
 import unittest
 
-from textnode import TextNode, TextType, text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links
+from textnode import TextNode, TextType, text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnodes
 
 
 class TestTextNode(unittest.TestCase):
@@ -57,6 +57,66 @@ class TestTextNode(unittest.TestCase):
             "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png)"
         )
         self.assertListEqual([("image", "https://i.imgur.com/zjjcJKZ.png")], matches)
+
+
+    def test_split_images(self):
+        node = TextNode(
+            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and another ![second image](https://i.imgur.com/3elNhQu.png)",
+            TextType.TEXT,
+        )
+        new_nodes = split_nodes_image([node])
+        self.assertListEqual(
+            [
+                TextNode("This is text with an ", TextType.TEXT),
+                TextNode("image", TextType.IMAGE, "https://i.imgur.com/zjjcJKZ.png"),
+                TextNode(" and another ", TextType.TEXT),
+                TextNode(
+                    "second image", TextType.IMAGE, "https://i.imgur.com/3elNhQu.png"
+                ),
+            ],
+            new_nodes,
+        )
+
+
+    def test_split_links(self):
+        node = TextNode(
+            "Please go to [secure link](https://i.will.scam.you.ru) or u will [get scammed](https://this-is-safe.com)[get scammed](https://this-is-safe.com)",
+            TextType.TEXT
+        )
+        new_nodes = split_nodes_link([node])
+        self.assertListEqual(
+            [
+                TextNode("Please go to ", TextType.TEXT),
+                TextNode("secure link", TextType.LINK, "https://i.will.scam.you.ru"),
+                TextNode(" or u will ", TextType.TEXT),
+                TextNode("get scammed", TextType.LINK, "https://this-is-safe.com"),
+                TextNode("get scammed", TextType.LINK, "https://this-is-safe.com"),
+            ],
+            new_nodes,
+        )
+
+
+    def test_split_madness(self):
+        text = "**SOME** _body_ `once` ![told me](the.world.is) [gonna](roll.me) I ain't the sharpest **TOOL** in the _shed_"
+        new_nodes = text_to_textnodes(text)
+        self.assertListEqual(
+            [
+                TextNode("SOME", TextType.BOLD),
+                TextNode(" ", TextType.TEXT),
+                TextNode("body", TextType.ITALIC),
+                TextNode(" ", TextType.TEXT),
+                TextNode("once", TextType.CODE),
+                TextNode(" ", TextType.TEXT),
+                TextNode("told me", TextType.IMAGE, "the.world.is"),
+                TextNode(" ", TextType.TEXT),
+                TextNode("gonna", TextType.LINK, "roll.me"),
+                TextNode(" I ain't the sharpest ", TextType.TEXT),
+                TextNode("TOOL", TextType.BOLD),
+                TextNode(" in the ", TextType.TEXT),
+                TextNode("shed", TextType.ITALIC),
+            ],
+            new_nodes,
+        )
 
 
 if __name__ == "__main__":

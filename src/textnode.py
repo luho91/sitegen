@@ -64,10 +64,10 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
                 if len(text_array) == 1:
                     r.append(TextNode(text_array[0], TextType.TEXT))
                     break
-                text_array, partial_array = text_array[3:], text_array[0:3]
-                r.append(TextNode(partial_array[0], TextType.TEXT))
+                text_array, partial_array = text_array[2:], text_array[0:2]
+                if partial_array[0] != "":
+                    r.append(TextNode(partial_array[0], TextType.TEXT))
                 r.append(TextNode(partial_array[1], text_type))
-                r.append(TextNode(partial_array[2], TextType.TEXT))
     return r
 
 
@@ -79,3 +79,56 @@ def extract_markdown_images(text):
 def extract_markdown_links(text):
     matches = re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
     return matches
+
+
+def split_nodes_image(old_nodes):
+    r = []
+    for n in old_nodes:
+        if n.text_type != TextType.TEXT:
+            r.append(n)
+        else:
+            c = n.text
+            matches = extract_markdown_images(c)
+            for m in matches:
+                the_array = c.split(f"![{m[0]}]({m[1]})", 1)
+                if the_array[0] != "":
+                    r.append(TextNode(the_array[0], TextType.TEXT))
+
+                r.append(TextNode(m[0], TextType.IMAGE, m[1]))
+                if len(the_array) > 1:
+                    c = the_array[1]
+            if c != "":
+                r.append(TextNode(c, TextType.TEXT))
+    return r
+
+
+
+def split_nodes_link(old_nodes):
+    r = []
+    for n in old_nodes:
+        if n.text_type != TextType.TEXT:
+            r.append(n)
+        else:
+            c = n.text
+            matches = extract_markdown_links(c)
+            for m in matches:
+                the_array = c.split(f"[{m[0]}]({m[1]})", 1)
+                if the_array[0] != "":
+                    r.append(TextNode(the_array[0], TextType.TEXT))
+                
+                r.append(TextNode(m[0], TextType.LINK, m[1]))
+                if len(the_array) > 1:
+                    c = the_array[1]
+            if c != "":
+                r.append(TextNode(c, TextType.TEXT))
+    return r
+
+
+def text_to_textnodes(text):
+    r = split_nodes_delimiter([TextNode(text, TextType.TEXT)], "**", TextType.BOLD)
+    r = split_nodes_delimiter(r, "_", TextType.ITALIC)
+    r = split_nodes_delimiter(r, "`", TextType.CODE)
+    r = split_nodes_image(r)
+    r = split_nodes_link(r)
+
+    return r
