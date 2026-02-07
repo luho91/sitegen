@@ -1,11 +1,8 @@
-from textnode import TextNode, TextType
-
+from copy import copy_all_from_source_to_target
 
 
 def main():
-    n = TextNode("This is some anchor text", TextType.LINK, "www.hdf.de")
-    print(n)
-
+    copy_all_from_source_to_target("static", "public")
 
 
 if __name__ == "__main__":
