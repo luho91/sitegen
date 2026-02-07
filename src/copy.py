@@ -21,18 +21,18 @@ def copy_all_from_source_to_target(source_path, target_path):
         dst = root / dst
     dst = dst.resolve()
 
-    if not dst.is_dir():
-        raise NotADirectoryError(dst)
-
-    if dst.exists():
+    if not dst.exists():
+        dst.mkdir(parents=True, exist_ok=True)
+    else:
+        if not dst.is_dir():
+            raise NotADirectoryError(dst)
         shutil.rmtree(dst)
-    dst.mkdir(parents=True, exist_ok=True)
 
     c = list(src.iterdir())
     
     for cc in c:
         if cc.is_file():
-            shutil.copy2(f, dst)
+            shutil.copy2(cc, dst)
         if cc.is_dir():
-            tdir = (dst / d.name)
-            copy_all_from_source_to_target(d, tdir)
+            tdir = (dst / cc.name)
+            copy_all_from_source_to_target(cc, tdir)
