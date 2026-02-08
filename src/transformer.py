@@ -36,9 +36,11 @@ def markdown_to_html_node(markdown):
             case BlockType.QUOTE:
                 dad = ParentNode("blockquote", children=list(map(text_node_to_html_node, text_to_textnodes(children_string))))
             case BlockType.UNORDERED_LIST:
-                dad = ParentNode("ul", children=[LeafNode("li", x) for x in children_string.split("\n")])
+                html_children = list(map(add_child_stink, children_string.split("\n")))
+                dad = ParentNode("ul", children=[ParentNode("li", children=x) for x in html_children])
             case BlockType.ORDERED_LIST:
-                dad = ParentNode("ol", children=[LeafNode("li", x) for x in children_string.split("\n")])
+                html_children = list(map(add_child_stink, children_string.split("\n")))
+                dad = ParentNode("ol", children=[ParentNode("li", children=x) for x in html_children])
             case _:
                 raise TypeError("Woah there, what kind of block is this?")
 
@@ -77,3 +79,7 @@ def strip_dad_stink(block, blocktype):
             return "\n".join(r)
         case _:
             raise Exception("Unknown Block Type!")
+
+
+def add_child_stink(children_string):
+    return list(map(text_node_to_html_node, text_to_textnodes(children_string)))

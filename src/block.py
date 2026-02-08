@@ -15,7 +15,7 @@ class BlockType(Enum):
 def block_to_block_type(block):
     h = re.compile(r'^#{1,6} ')
     if h.match(block):
-        return BlockType.PARAGRAPH
+        return BlockType.HEADING
     if block.startswith("```\n") and block.endswith("```"):
         return BlockType.CODE
     blocklines = block.split("\n")
@@ -33,8 +33,11 @@ def block_to_block_type(block):
 
 
 def line_to_block_type(line):
+    ol = re.compile(r"^\d+\. ")
     if line.startswith(">"):
         return BlockType.QUOTE
     if line.startswith("- "):
         return BlockType.UNORDERED_LIST
-    return BlockType.ORDERED_LIST
+    if ol.match(line):
+        return BlockType.ORDERED_LIST
+    return BlockType.PARAGRAPH
