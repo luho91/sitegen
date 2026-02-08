@@ -3,7 +3,7 @@ from extract import extract_title
 from pathlib import Path
 
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
 
     with open(from_path, "r") as f:
@@ -14,14 +14,14 @@ def generate_page(from_path, template_path, dest_path):
 
     html = markdown_to_html_node(from_content).to_html()
     title = extract_title(from_content)
-    new_content = template_content.replace("{{ Title }}", title).replace("{{ Content }}", html)
+    new_content = template_content.replace("{{ Title }}", title).replace("{{ Content }}", html).replace("href=\"/", f"href=\"{basepath}").replace("src=\"/", "src=\"{basepath}")
 
     dst = Path(dest_path)
     dst.parent.mkdir(parents=True, exist_ok=True)
     dst.write_text(new_content, encoding="utf-8")
 
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
     root = Path(__file__).resolve().parents[1]
     template_path = (root / template_path).resolve()
 
@@ -44,7 +44,7 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
         if el.is_file() and el.suffix == ".md":
             rel = el.relative_to(src)
             new_name = (dst / rel).with_suffix(".html")
-            generate_page(el, template_path, new_name)
+            generate_page(el, template_path, new_name, basepath)
         if el.is_dir():
             new_dst = dst / el.name
-            generate_pages_recursive(el, template_path, new_dst)
+            generate_pages_recursive(el, template_path, new_dst, basepath)
